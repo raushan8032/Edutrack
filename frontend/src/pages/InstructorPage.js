@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useAuth } from '../context/AuthContext';
 
 const categories = ['Web Development', 'Data Science', 'Machine Learning', 'Mobile Dev', 'DevOps', 'Design', 'Business', 'Other'];
 const levels = ['Beginner', 'Intermediate', 'Advanced'];
@@ -31,7 +30,6 @@ const getEmbedPreview = (url) => {
 };
 
 const InstructorPage = () => {
-  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);

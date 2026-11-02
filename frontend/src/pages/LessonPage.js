@@ -52,15 +52,6 @@ const getEmbedUrl = (url) => {
   return url;
 };
 
-const isVideoUrl = (url) => {
-  if (!url) return false;
-  return (
-    url.includes('youtube') || url.includes('youtu.be') ||
-    url.includes('vimeo') || url.includes('drive.google') ||
-    url.match(/\.(mp4|webm|ogg)$/i)
-  );
-};
-
 /* ═══════════════════════════════════════
    AI ASSISTANT COMPONENT — Professional ChatGPT-like Interface
 ═══════════════════════════════════════ */
@@ -89,10 +80,15 @@ const renderMarkdown = (text) => {
     .replace(/\n/g, '<br/>');
 };
 
-const AIAssistant = ({ courseId, lessonId, lessonTitle }) => {
-  const INITIAL_MSG = { role: 'bot', text: `Hi! I'm your **AI Study Assistant** 🤖\n\nI'm here to help you understand **"${lessonTitle}"**. I can:\n- Explain concepts step by step\n- Solve math and coding problems\n- Generate summaries and practice questions\n- Answer in **English or Hindi**\n\nAsk me anything!` };
+const createInitialAiMessage = lessonTitle => ({
+  role: 'bot',
+  text: `Hi! I'm your **AI Study Assistant** 🤖\n\nI'm here to help you understand **"${lessonTitle}"**. I can:\n- Explain concepts step by step\n- Solve math and coding problems\n- Generate summaries and practice questions\n- Answer in **English or Hindi**\n\nAsk me anything!`
+});
 
-  const [messages, setMessages] = useState([INITIAL_MSG]);
+const AIAssistant = ({ courseId, lessonId, lessonTitle }) => {
+  const initialMessage = createInitialAiMessage(lessonTitle);
+
+  const [messages, setMessages] = useState([initialMessage]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -118,9 +114,9 @@ const AIAssistant = ({ courseId, lessonId, lessonTitle }) => {
 
   // Reset on lesson change
   useEffect(() => {
-    setMessages([INITIAL_MSG]);
+    setMessages([createInitialAiMessage(lessonTitle)]);
     conversationHistory.current = [];
-  }, [lessonId]);
+  }, [lessonId, lessonTitle]);
 
   const sendMessage = async (questionText) => {
     const userMsg = (questionText || input).trim();
@@ -181,7 +177,7 @@ const AIAssistant = ({ courseId, lessonId, lessonTitle }) => {
   ];
 
   const clearChat = () => {
-    setMessages([INITIAL_MSG]);
+    setMessages([createInitialAiMessage(lessonTitle)]);
     conversationHistory.current = [];
   };
 
@@ -419,7 +415,7 @@ const LessonPage = () => {
       }
     };
     fetchData();
-  }, [courseId, lessonId]);
+  }, [courseId, lessonId, navigate]);
 
   // Reset state when lesson changes
   useEffect(() => {

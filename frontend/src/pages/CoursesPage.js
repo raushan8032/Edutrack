@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useAuth } from '../context/AuthContext';
 
 const categories = ['All', 'Web Development', 'Data Science', 'Machine Learning', 'Mobile Dev', 'DevOps', 'Design', 'Business'];
 const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
@@ -89,34 +88,33 @@ const CoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [level, setLevel] = useState('All');
   const [enrolledIds, setEnrolledIds] = useState([]);
   const [total, setTotal] = useState(0);
-  const { user } = useAuth();
-
-  useEffect(() => { fetchCourses(); fetchEnrolled(); }, [category, level]);
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     setLoading(true);
     try {
       const params = {};
       if (category !== 'All') params.category = category;
       if (level !== 'All') params.level = level;
-      if (search) params.search = search;
+      if (appliedSearch) params.search = appliedSearch;
       const res = await axios.get('/api/courses', { params });
       setCourses(res.data.courses);
       setTotal(res.data.total || res.data.courses.length);
     } catch { toast.error('Failed to load courses'); }
     finally { setLoading(false); }
-  };
+  }, [category, level, appliedSearch]);
 
-  const fetchEnrolled = async () => {
+  const fetchEnrolled = useCallback(async () => {
     try {
       const res = await axios.get('/api/progress/my');
       setEnrolledIds(res.data.progress.map(p => p.course?._id).filter(Boolean));
     } catch {}
-  };
+  }, []);
+
+  useEffect(() => { fetchCourses(); fetchEnrolled(); }, [fetchCourses, fetchEnrolled]);
 
   const handleEnroll = async (courseId) => {
     try {
@@ -126,7 +124,7 @@ const CoursesPage = () => {
     } catch (err) { toast.error(err.response?.data?.message || 'Enrollment failed'); }
   };
 
-  const handleSearch = (e) => { e.preventDefault(); fetchCourses(); };
+  const handleSearch = (e) => { e.preventDefault(); setAppliedSearch(search.trim()); };
 
   return (
     <div style={{ animation: 'fadeUp 0.5s ease' }}>
@@ -145,7 +143,7 @@ const CoursesPage = () => {
             style={{ flex: 1 }}
           />
           <button type="submit" className="btn btn-primary" style={{ padding: '10px 20px' }}>Search</button>
-          {search && <button type="button" className="btn btn-secondary" style={{ padding: '10px 14px' }} onClick={() => { setSearch(''); fetchCourses(); }}>✕</button>}
+          {search && <button type="button" className="btn btn-secondary" style={{ padding: '10px 14px' }} onClick={() => { setSearch(''); setAppliedSearch(''); }}>✕</button>}
         </form>
 
         {/* Category filters */}
@@ -194,7 +192,7 @@ const CoursesPage = () => {
           <div className="empty-icon">🔍</div>
           <h3>No courses found</h3>
           <p>Try adjusting your filters or search term to find what you're looking for.</p>
-          <button className="btn btn-secondary" onClick={() => { setCategory('All'); setLevel('All'); setSearch(''); fetchCourses(); }}>
+          <button className="btn btn-secondary" onClick={() => { setCategory('All'); setLevel('All'); setSearch(''); setAppliedSearch(''); }}>
             Clear Filters
           </button>
         </div>

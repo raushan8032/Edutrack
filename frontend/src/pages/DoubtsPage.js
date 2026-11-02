@@ -19,7 +19,6 @@ const PRIORITY_META = {
   urgent: { label: 'Urgent', color: 'var(--rose)',          icon: '🔥' },
 };
 
-const fmtDate = d => d ? new Date(d).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 const fmtRelative = d => {
   if (!d) return '';
   const diff = Date.now() - new Date(d).getTime();
