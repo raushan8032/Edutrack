@@ -7,12 +7,23 @@ const path = require('path');
 dotenv.config();
 
 const app = express();
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+const pdfDirectory = process.env.UPLOADS_DIR || path.join(__dirname, 'uploads', 'pdfs');
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Origin is not allowed by CORS'));
+  },
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads/pdfs', express.static(path.join(__dirname, 'uploads', 'pdfs'), {
+app.use('/uploads/pdfs', express.static(pdfDirectory, {
   dotfiles: 'deny',
   index: false,
   setHeaders: res => res.setHeader('X-Content-Type-Options', 'nosniff')

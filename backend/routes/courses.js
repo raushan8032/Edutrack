@@ -11,7 +11,7 @@ const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { protect, authorize } = require('../middleware/auth');
 
-const pdfDirectory = path.join(__dirname, '..', 'uploads', 'pdfs');
+const pdfDirectory = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'uploads', 'pdfs');
 fs.mkdirSync(pdfDirectory, { recursive: true });
 const pdfUpload = multer({
   storage: multer.diskStorage({

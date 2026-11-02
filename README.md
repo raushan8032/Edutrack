@@ -79,12 +79,20 @@ Set these in `backend/.env`. Do not commit that file.
 | `JWT_SECRET` | Yes | Long, random secret for signing authentication tokens. |
 | `NODE_ENV` | No | Runtime mode, for example `development` or `production`. |
 | `API_PUBLIC_URL` | For separate/public API hosts | Public base URL used when generating uploaded PDF links. |
+| `FRONTEND_URL` | Production | Comma-separated allowed browser origins, including the Vercel production URL. |
+| `UPLOADS_DIR` | For persistent PDF storage | Absolute directory for uploaded PDFs, such as `/var/data/pdfs` on a mounted persistent disk. Leave unset for local development. |
 | `GEMINI_API_KEY` | No | Enables Google Gemini responses for the course assistant. |
 | `GEMINI_MODEL` | No | Gemini model name; defaults to `gemini-2.5-flash`. |
 | `OPENAI_API_KEY` | No | Enables OpenAI responses if Gemini is not configured or unavailable. |
 | `OPENAI_MODEL` | No | OpenAI model name; defaults to `gpt-4o-mini`. |
 
 Use either AI provider or both. Provider keys remain on the backend and must never be added to frontend source or Git.
+
+The frontend also supports this build-time variable:
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `REACT_APP_API_URL` | Production | Backend API origin, for example `https://edutrack-api.onrender.com`; do not include a trailing slash. Leave unset for local development, where CRA proxies to localhost. |
 
 ## Build and Verification
 
@@ -104,11 +112,34 @@ The repository currently has no dedicated automated test files. Start the backen
 
 ## Deployment Notes
 
-- Deploy the backend and frontend as separate services only after configuring the backend CORS origin for the deployed frontend. The current development CORS setting allows `http://localhost:3000`.
-- Configure the frontend host and backend so `/api` requests reach the API. If the frontend and API use different public hosts, set `API_PUBLIC_URL` to the public API origin.
-- Uploaded PDFs are stored on the backend filesystem. Use persistent storage or object storage in production; ephemeral application filesystems can discard uploads during redeploys.
-- Set MongoDB and AI provider variables in the hosting provider's secret/environment settings, not in Git.
-- The backend package's `start` script runs `node server.js`. The frontend package's `build` script creates the production static bundle.
+### Frontend on Vercel
+
+Import this GitHub repository as a Vercel project and set:
+
+- Root Directory: `frontend`
+- Framework Preset: Create React App
+- Install Command: `npm install`
+- Build Command: `npm run build`
+- Output Directory: `build`
+- Environment Variable: `REACT_APP_API_URL=https://<your-backend-host>`
+
+`frontend/vercel.json` sends client-side routes to `index.html`, so refreshing routes such as `/courses` or `/doubts` continues to work.
+
+### Backend on Render or Railway
+
+The API is a long-running Express server and stores uploaded PDFs on disk. Host it as a Node web service rather than a Vercel function:
+
+- Root Directory: `backend`
+- Build Command: `npm ci`
+- Start Command: `npm start`
+- Configure `MONGO_URI`, `JWT_SECRET`, `FRONTEND_URL`, `API_PUBLIC_URL`, and optional AI provider variables in the host's secret settings.
+- Attach persistent storage mounted at `/var/data` and set `UPLOADS_DIR=/var/data/pdfs`; otherwise uploaded PDFs can disappear on redeploy/restart.
+- Set `FRONTEND_URL` to the exact Vercel site origin. For preview deployments, list each permitted origin separated by commas.
+- Set `API_PUBLIC_URL` to the backend's public HTTPS origin.
+
+Create a MongoDB Atlas database/user for production and set its connection string as `MONGO_URI`. Restrict database network access to the backend host's outbound addresses where available; do not use local MongoDB or seed/reset a production database.
+
+Set MongoDB, JWT, and AI provider secrets only in the respective hosting providers' environment-variable dashboards. Do not put secret values in Vercel frontend variables or source control. The backend package's `start` script runs `node server.js`; the frontend `build` script creates the static bundle.
 
 ## Repository Hygiene
 
