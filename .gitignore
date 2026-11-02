@@ -1,0 +1,53 @@
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*service-account*.json
+
+# Dependencies and generated output
+node_modules/
+**/node_modules/
+build/
+**/build/
+dist/
+**/dist/
+.vite/
+coverage/
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Runtime uploads and logs
+backend/uploads/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+*.swp
+*.swo
+
+# Python artifacts (if helper scripts are added later)
+__pycache__/
+**/__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
